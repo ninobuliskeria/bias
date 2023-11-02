@@ -1,0 +1,159 @@
+library("tidyverse") # This will load ggplot2, dplyr, readxl, and other essential packages
+library("writexl")
+library("readxl")
+
+rm(list = ls())
+# Set Working Directory
+setwd("H:/My Drive/BIAS/bias/MAIVE")
+
+# Import Data ####
+allFE  <- read_excel("MAIVE_allFE.xlsx") 
+pFE    <- read_excel("MAIVE_pFE.xlsx") 
+wpFE   <- read_excel("MAIVE_wpFE.xlsx") 
+wpsFE  <- read_excel("MAIVE_wpsFE.xlsx") 
+npFE   <- read_excel("MAIVE_npFE.xlsx") 
+
+allBE  <- read_excel("MAIVE_allBE.xlsx") 
+pBE    <- read_excel("MAIVE_pBE.xlsx") 
+wpBE   <- read_excel("MAIVE_wpBE.xlsx") 
+wpsBE  <- read_excel("MAIVE_wpsBE.xlsx") 
+npBE   <- read_excel("MAIVE_npBE.xlsx") 
+
+
+
+# Rename Variables ####
+allFE <- allFE %>% rename_with(~c("E_FE", "SE_FE", "F_FE", "Hausman_FE", "CV_FE", "Obs_FE"),
+                         .cols = c("E", "SE", "F", "Hausman", "CV_of_Chi2", "Obs"))
+pFE   <- pFE %>% rename_with(~c("E_pFE", "SE_pFE", "F_pFE", "Hausman_pFE", "CV_pFE", "Obs_pFE"),
+                             .cols = c("pE", "pSE", "pF", "pHausman", "pCV", "pObs"))
+wpFE  <- wpFE %>% rename_with(~c("E_wpFE", "SE_wpFE", "F_wpFE", "Hausman_wpFE", "CV_wpFE", "Obs_wpFE"),
+                              .cols = c("wpE", "wpSE", "wpF", "wpHausman", "wpCV", "wpObs"))
+wpsFE <- wpsFE %>% rename_with(~c("E_wpsFE", "SE_wpsFE", "F_wpsFE", "Hausman_wpsFE", "CV_wpsFE", "Obs_wpsFE"),
+                               .cols = c("wpsE", "wpsSE", "wpsF", "wpsHausman", "wpsCV", "wpsObs"))
+npFE  <- npFE %>% rename_with(~c("E_npFE", "SE_npFE", "F_npFE", "Hausman_npFE", "CV_npFE", "Obs_npFE"),
+                              .cols = c("npE", "npSE", "npF", "npHausman", "npCV", "npObs"))
+
+allBE    <- allBE %>% rename_with(~c("E_BE", "SE_BE", "F_BE", "Hausman_BE", "CV_BE", "Obs_BE"),
+                            .cols = c("E", "SE", "F", "Hausman", "CV_of_Chi2", "Obs"))
+pBE      <- pBE %>% rename_with(~c("E_pBE", "SE_pBE", "F_pBE", "Hausman_pBE", "CV_pBE", "Obs_pBE"),
+                            .cols = c("pE", "pSE", "pF", "pHausman", "pCV", "pObs"))
+wpBE     <- wpBE %>% rename_with(~c("E_wpBE", "SE_wpBE", "F_wpBE", "Hausman_wpBE", "CV_wpBE", "Obs_wpBE"),
+                            .cols = c("wpE", "wpSE", "wpF", "wpHausman", "wpCV", "wpObs"))
+wpsBE    <- wpsBE %>% rename_with(~c("E_wpsBE", "SE_wpsBE", "F_wpsBE", "Hausman_wpsBE", "CV_wpsBE", "Obs_wpsBE"),
+                            .cols = c("wpsE", "wpsSE", "wpsF", "wpsHausman", "wpsCV", "wpsObs"))
+npBE     <- npBE %>% rename_with(~c("E_npBE", "SE_npBE", "F_npBE", "Hausman_npBE", "CV_npBE", "Obs_npBE"),
+                            .cols = c("npE", "npSE", "npF", "npHausman", "npCV", "npObs"))
+
+# Merge Data ####
+data <- list(allFE, pFE, wpFE, wpsFE, npFE, allBE, pBE, wpBE, wpsBE, npBE) %>%
+  reduce(full_join, by = "Row_Names")
+
+
+# Define a function to create beta columns
+create_beta_columns <- function(df) {
+  mutate(df,
+         beta = abs(E_FE / E_BE),
+         beta_p = abs(E_pFE / E_pBE),
+         beta_wp = abs(E_wpFE / E_wpBE),
+         beta_wps = abs(E_wpsFE / E_wpsBE),
+         beta_np = abs(E_npFE / E_npBE)
+  )
+}
+
+# Apply the function to the data frame
+data_with_beta <- create_beta_columns(data)
+
+# Function to calculate the mean and its 95% CI
+ mean_ci <- function(x) {
+   se <- sd(x, na.rm = TRUE) / sqrt(length(x))
+   mean_x <- mean(x, na.rm = TRUE)
+   ci <- qnorm(c(0.025, 0.975), mean = mean_x, sd = se)
+   c(mean = mean_x, ci_lower = ci[1], ci_upper = ci[2])
+ }
+ 
+# Function to calculate the median and its 95% CI using bootstrapping
+ median_ci <- function(x, n = 1000) {
+   boot_obj <- boot(x, statistic = function(x, i) median(x[i]), R = n)
+   ci <- boot.ci(boot_obj,conf = 0.95, type = "perc")$percent[4:5]
+   c(median = median(x, na.rm = TRUE), ci_lower = ci[1], ci_upper = ci[2])
+ }
+   
+# Define a custom function to summarize the data with CIs and p-values
+ summarize_stats <- function(data, fe_f_test, be_f_test, fe_n_col, be_n_col, beta_col) {
+   # Filter and summarize data
+   summary <- data %>%
+     filter(!!sym(fe_f_test) > 10, !!sym(be_f_test) > 10, !!sym(fe_n_col) > 10, !!sym(be_n_col) > 10) %>%
+     summarise(
+       count = n(),
+       median_stat = list(median_ci(!!sym(beta_col))),
+       mean_stat = list(mean_ci(!!sym(beta_col)))
+     ) %>%
+     mutate(
+       variable = beta_col,
+       mean = mean_stat[[1]]['mean'],
+       mean_ci_lower = mean_stat[[1]]['ci_lower'],
+       mean_ci_upper = mean_stat[[1]]['ci_upper'],
+       median = median_stat[[1]]['median'],
+       median_ci_lower = median_stat[[1]]['ci_lower'],
+       median_ci_upper = median_stat[[1]]['ci_upper']
+     ) %>%
+     select(-median_stat, -mean_stat)
+   
+   # Calculate p-values
+   beta_values <- na.omit(data[[beta_col]])
+   t_test_result <- t.test(beta_values, mu = 1, alternative = "greater")
+   wilcox_test_result <- wilcox.test(beta_values, mu = 1, alternative = "greater", conf.int = TRUE)
+   
+   # Add p-values to the summary
+   summary <- summary %>%
+     mutate(
+       mean_p_value = t_test_result$p.value,
+       median_p_value = wilcox_test_result$p.value
+     )
+   
+   return(summary)
+ }
+ 
+# Create a function to apply summarize_stats to each set of conditions
+apply_summary <- function(df, conditions) {
+  map_dfr(conditions, ~summarize_stats(df, .x[1], .x[2], .x[3]))
+}
+
+# Define variable names for conditions
+conditions <- list(
+  c("F_FE","F_BE", "Obs_FE",    "Obs_BE", "beta"),
+  c("F_pFE","F_BE", "Obs_pFE",   "Obs_pBE", "beta_p"),
+  c("F_wpFE","F_BE", "Obs_wpFE",  "Obs_wpBE", "beta_wp"),
+  c("F_wpsFE","F_BE", "Obs_wpsFE", "Obs_wpsBE", "beta_wps"),
+  c("F_npFE","F_BE", "Obs_npFE",  "Obs_npBE", "beta_np")
+)
+
+# Apply the summarize_stats function to your data frame with the specified conditions
+final_results <- apply_summary(data_with_beta, conditions)
+final_results <- map_dfr(conditions, ~summarize_stats(data_with_beta, .x[1], .x[2], .x[3]))
+# View the results
+print(final_results)
+
+# Continue with LaTeX code generation as before
+library(xtable)
+xtable_object <- xtable(final_results)
+print(xtable_object, include.rownames = FALSE, floating = FALSE)
+latex_code <- capture.output(print(xtable_object, include.rownames = FALSE, floating = FALSE))
+writeLines(latex_code, "MaivePhi.tex")
+   
+   
+# 
+# 
+# data$b <- abs(data$E_FE/data$E_BE)
+# 
+# b <- data[is.finite(data$b) & data$F_FE>10 & data$F_BE>10 & data$Obs_BE > 10 & data$Obs_FE > 10 ,]$b
+# 
+# mean(b, na.rm = TRUE)
+# median(b, na.rm = TRUE)
+# 
+# # Save Merged Results
+# write_xlsx(merged_results, "MAIVEresults.xlsx")
+# 
+# # Cleanup
+# rm(list = setdiff(ls(), "merged_results"))
+#  
