@@ -1,0 +1,37 @@
+> # WP/PP
+> mean(wppp, na.rm = TRUE)
+[1] 5.752235
+> cat("95% CI for the mean:", ci_mean_wppp, "\n")
+95% CI for the mean: 3.726555 7.777916 
+> median(wppp, na.rm = TRUE)
+[1] 1.26592
+> cat("95% CI for the median:", ci_median_wppp, "\n")
+95% CI for the median: 1.069326 1.598251 
+> sum(!is.na(wppp))
+[1] 282
+
+
+> # wp/pp_FE
+> mean(wppp_FE, na.rm = TRUE)
+[1] 14.78615
+> cat("95% CI for the mean:", ci_mean_wppp_FE, "\n")
+95% CI for the mean: 9.405526 20.16678 
+> median(wppp_FE, na.rm = TRUE)
+[1] 1.76958
+> cat("95% CI for the median:", ci_median_wppp_FE, "\n")
+95% CI for the median: 1.367425 2.101433 
+> sum(!is.na(wppp_FE))
+[1] 280
+
+> # RESULTS ####
+> # wp/pp_BE
+> mean(wppp_BE, na.rm = TRUE)
+[1] 9.482544
+> cat("95% CI for the mean:", ci_mean_wppp_BE, "\n")
+95% CI for the mean: 5.694217 13.27087 
+> median(wppp_BE, na.rm = TRUE)
+[1] 1.34384
+> cat("95% CI for the median:", ci_median_wppp_BE, "\n")
+95% CI for the median: 1.139345 1.668707 
+> sum(!is.na(wppp_BE))
+[1] 286

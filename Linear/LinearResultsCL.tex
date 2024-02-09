@@ -1,0 +1,75 @@
+	   
+> # RESULTS 1 ####
+> # all, FE/BE 
+> mean(results$psi, na.rm = TRUE)
+[1] 7.367249
+> cat("95% CI for the mean:", ci_mean, "\n")
+95% CI for the mean: 4.215557 10.51894 
+> median(results$psi, na.rm = TRUE)
+[1] 1.152627
+> cat("95% CI for the median:", ci_median, "\n")
+95% CI for the median: 1.032975 1.380614 
+> sum(!is.na(results$psi))
+[1] 412
+> 
+> # published, FE/BE 
+> mean(resultsPP$ppPSI, na.rm = TRUE)
+[1] 7.784881
+> cat("95% CI for the mean:", ci_mean_PP, "\n")
+95% CI for the mean: 5.127236 10.44253 
+> median(resultsPP$ppPSI, na.rm = TRUE)
+[1] 1.18652
+> cat("95% CI for the median:", ci_median_PP, "\n")
+95% CI for the median: 1.031847 1.475159 
+> sum(!is.na(resultsPP$ppPSI))
+[1] 409
+> 
+> # working papers, FE/BE 
+> mean(resultsWP$wpPSI, na.rm = TRUE)
+[1] 10.62027
+> cat("95% CI for the mean:", ci_mean_WP, "\n")
+95% CI for the mean: 7.028076 14.21247 
+> median(resultsWP$wpPSI, na.rm = TRUE)
+[1] 1.161432
+> cat("95% CI for the median:", ci_median_WP, "\n")
+95% CI for the median: 0.8635353 1.702292 
+> sum(!is.na(resultsWP$wpPSI))
+[1] 290
+> 
+> # RESULTS 2 ####
+> # WP/PP 
+> mean(wppp, na.rm = TRUE)
+[1] 5.483175
+> cat("95% CI for the mean:", ci_mean_wppp, "\n")
+95% CI for the mean: 3.218465 7.747885 
+> median(wppp, na.rm = TRUE)
+[1] 1.227527
+> cat("95% CI for the median:", ci_median_wppp, "\n")
+95% CI for the median: 1.053144 1.55449 
+> sum(!is.na(wppp))
+[1] 269
+> 
+> # wp/pp_FE 
+> mean(wppp_FE, na.rm = TRUE)
+[1] 5.916603
+> cat("95% CI for the mean:", ci_mean_wppp_FE, "\n")
+95% CI for the mean: 2.864243 8.968962 
+> median(wppp_FE, na.rm = TRUE)
+[1] 1.158392
+> cat("95% CI for the median:", ci_median_wppp_FE, "\n")
+95% CI for the median: 0.8663536 1.289109 
+> sum(!is.na(wppp_FE))
+[1] 194
+> 
+> # wp/pp_BE 
+> mean(wppp_BE, na.rm = TRUE)
+[1] 5.977049
+> cat("95% CI for the mean:", ci_mean_wppp_BE, "\n")
+95% CI for the mean: 2.938142 9.015955 
+> median(wppp_BE, na.rm = TRUE)
+[1] 1.160414
+> cat("95% CI for the median:", ci_median_wppp_BE, "\n")
+95% CI for the median: 0.8673838 1.290143 
+> sum(!is.na(wppp_BE))
+[1] 195
+> 
